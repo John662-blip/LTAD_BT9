@@ -10,9 +10,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResult;
@@ -27,14 +29,21 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.bt9.API.Respon.ImageUpload;
+import com.example.bt9.API.Respon.Re_Update_Image;
+import com.example.bt9.API.ServiceAPI;
 import com.example.bt9.Utils.RealPathUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.http.Multipart;
 
 public class MainActivity extends AppCompatActivity {
@@ -57,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     };
     private ActivityResultLauncher<Intent>  mActivityResultLaucher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultContract<ActivityResult>(){
+            new ActivityResultCallback<ActivityResult>(){
                 public void onActivityResult(ActivityResult result){
                     if (result.getResultCode()== Activity.RESULT_OK){
                         Intent data = result.getData();
@@ -103,12 +112,29 @@ public class MainActivity extends AppCompatActivity {
     }
     public void UploadImage1(){
         mProgressDialog.show();
-        RequestBody requestID = RequestBody.create(MediaType.parse("multipart/form-data"),"5");
         String ImagePart = RealPathUtil.getRealPath(this,mUri);
         File file = new File(ImagePart);
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),file);
         MultipartBody.Part partbody = MultipartBody.Part.createFormData("images",file.getName(),requestFile);
+        ServiceAPI.serviceapi.uploadImage(5L,partbody).enqueue(new Callback<Re_Update_Image>() {
+            @Override
+            public void onResponse(Call<Re_Update_Image> call, Response<Re_Update_Image> response) {
+                mProgressDialog.dismiss();
+                if (response.isSuccessful() == true){
+                    Toast.makeText(MainActivity.this, "Thanh Cong", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(MainActivity.this, response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
 
+            @Override
+            public void onFailure(Call<Re_Update_Image> call, Throwable t) {
+                mProgressDialog.dismiss();
+                Log.e("API_ERROR", "Error: " + t.getMessage(), t);
+                Toast.makeText(MainActivity.this, "Thanh Cong", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
     private void Anhxa(){
         btnChose = findViewById(R.id.button2);
@@ -131,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
             openGallery();
             return;
         }
-        if (checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE)== PackageManager.PERMISSION_GRANTED){
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)== PackageManager.PERMISSION_GRANTED){
             openGallery();
         }
         else{

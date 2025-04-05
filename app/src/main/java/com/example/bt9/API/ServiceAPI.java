@@ -22,6 +22,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.Query;
 
 public interface ServiceAPI {
     public static final String BASE_URL = "http://app.iotstar.vn:8081/appfoods/";
@@ -46,7 +47,7 @@ public interface ServiceAPI {
     @Multipart
     @POST("updateimages.php")
     Call<Re_Update_Image> uploadImage(
-            @Part("id") RequestBody id,
+            @Query("id") Long id,
             @Part MultipartBody.Part images
     );
 }
